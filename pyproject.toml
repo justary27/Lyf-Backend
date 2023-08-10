@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "lyf"
+version = "0.1.0"
+description = "Backend for the Lyf app"
+authors = ["just-ary27 <aryan_r@ch.iitr.ac.in>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11.4"
+Django = "^4.2.2"
+djangorestframework = "^3.14.0"
+python-dotenv = "^1.0.0"
+firebase-admin = "^6.1.0"
+django-cors-headers = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
