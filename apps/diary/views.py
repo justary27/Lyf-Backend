@@ -1,12 +1,12 @@
 from rest_framework import status
-from django.http import HttpRequest
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from services.firebase.auth import FirebaseAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from enums.response_type import ResponseType
-from handlers.pagination_handler import lyf_paginator
+from handlers.pagination_handler import LyfPaginator
 
 from .models import DiaryEntry
 from .enums import DiaryMessage
@@ -18,8 +18,8 @@ class DiaryViews:
     @staticmethod
     @api_view(["GET", "PUT", "POST", "PATCH", "DELETE"])
     @authentication_classes([FirebaseAuthentication])
-    @permission_classes([IsAuthenticated])    
-    def diary_list(request: HttpRequest, user_id: str):
+    @permission_classes([IsAuthenticated])
+    def diary_list(request: Request, user_id: str):
 
         match request.method:
             case "GET":
@@ -31,14 +31,14 @@ class DiaryViews:
                     ResponseType.INVALID_REQUEST.value.get_data(),
                     status.HTTP_405_METHOD_NOT_ALLOWED
                 )
-        
+
     @staticmethod
     @api_view(["GET", "PUT", "POST", "PATCH", "DELETE"])
     @authentication_classes([FirebaseAuthentication])
-    @permission_classes([IsAuthenticated])    
-    def diary_detail(request: HttpRequest, user_id: str, entry_id: str):
+    @permission_classes([IsAuthenticated])
+    def diary_detail(request: Request, user_id: str, entry_id: str):
 
-        if DiaryEntry.objects.check_if_entry_exists(user_id):
+        if DiaryEntry.objects.check_if_entry_exists(entry_id):
 
             match request.method:
                 case "GET":
@@ -61,28 +61,28 @@ class DiaryViews:
             )
 
     @staticmethod
-    def get_all_diaries(request: HttpRequest, user_id: str):
+    def get_all_diaries(request: Request, user_id: str):
+        """
+        Get the list of all the DiaryEntry(s) of a LyfUser.
+        """
         entries = DiaryEntry.objects.get_user_entries(user_id)
 
         serialized_entries = DiaryEntrySerializer(entries, many=True)
 
-        return lyf_paginator.get_paginated_response(
-            entries, request,
-            ResponseType.ok_request(
-                DiaryMessage.SUCCESS.value, serialized_entries.data
-            ).get_data()
+        return LyfPaginator(request).get_paginated_response(
+            serialized_entries.data,
         )
 
     @staticmethod
-    def create_entry(request: HttpRequest, user_id: str):
+    def create_entry(request: Request, user_id: str):
         data = request.data
-        
+
         entry_serializer = DiaryEntrySerializer(data=data)
 
         if entry_serializer.is_valid():
             entry_serializer.save()
             return Response(
-                ResponseType.ok_request(DiaryMessage.E_CREATE_SUCCESS.value).get_data(), 
+                ResponseType.ok_request(DiaryMessage.E_CREATE_SUCCESS.value).get_data(),
                 status.HTTP_201_CREATED
             )
         else:
@@ -93,18 +93,18 @@ class DiaryViews:
             )
 
     @staticmethod
-    def get_entry(request: HttpRequest, user_id: str, entry_id: str):
+    def get_entry(request: Request, user_id: str, entry_id: str):
         entry = DiaryEntry.objects.get_entry_by_id(entry_id)
 
         serialized_entry = DiaryEntrySerializer(entry)
 
         return Response(
-            ResponseType.ok_request(DiaryMessage.SUCCESS.value, serialized_entry.data).get_data(), 
+            ResponseType.ok_request(DiaryMessage.SUCCESS.value, serialized_entry.data).get_data(),
             status.HTTP_200_OK
         )
 
     @staticmethod
-    def update_entry(request: HttpRequest, user_id: str, entry_id: str):
+    def update_entry(request: Request, user_id: str, entry_id: str, **kwargs):
         data = request.data
 
         data["created_by"] = user_id
@@ -116,7 +116,7 @@ class DiaryViews:
         if entry_serializer.is_valid():
             entry_serializer.save()
             return Response(
-                ResponseType.ok_request(DiaryMessage.E_UPDATE_SUCCESS.value).get_data(), 
+                ResponseType.ok_request(DiaryMessage.E_UPDATE_SUCCESS.value).get_data(),
                 status.HTTP_200_OK
             )
         else:
@@ -126,7 +126,7 @@ class DiaryViews:
             )
 
     @staticmethod
-    def delete_entry(request: HttpRequest, user_id: str, entry_id: str):
+    def delete_entry(request: Request, user_id: str, entry_id: str):
         entry = DiaryEntry.objects.get_entry_by_id(entry_id)
 
         entry.delete()

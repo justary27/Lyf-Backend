@@ -13,3 +13,5 @@ DOES_NOT_EXIST_RESPONSE = {
 UNAUTHORIZED_RESPONSE = {
     "message": "You don't have appropriate access or are not authorized!"
 }
+
+SUCCESSFUL_RESPONSE = "Success!"

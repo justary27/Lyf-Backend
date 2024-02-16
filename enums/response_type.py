@@ -24,14 +24,15 @@ class ResponseType(Enum):
     )
 
     @staticmethod
-    def ok_request(msg: str, data=None):
-
+    def ok_request(msg: str, data=None, **kwargs):
         content = {
-            "message": msg
+            "message": msg,
         }
 
         if data is not None:
             content["data"] = data
+
+        content.update(kwargs["pagination_info"])
 
         return ResponseData(
             status.HTTP_200_OK, content

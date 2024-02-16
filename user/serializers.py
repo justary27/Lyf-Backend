@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 from .models import LyfUser
 
-class LyfUserSerializer(serializers.ModelSerializer):
 
+class LyfUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = LyfUser
 

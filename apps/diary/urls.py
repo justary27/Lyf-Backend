@@ -1,7 +1,7 @@
 from django.urls import path
-from . import views
+from .views import DiaryViews
 
 urlpatterns = [
-    path("", views.DiaryViews.diary_list),
-    path("<str:entry_id>/", views.DiaryViews.diary_detail),
+    path("", DiaryViews.diary_list),
+    path("<uuid:entry_id>/", DiaryViews.diary_detail),
 ]

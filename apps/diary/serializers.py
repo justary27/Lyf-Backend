@@ -9,7 +9,7 @@ class DiaryEntrySerializer(serializers.ModelSerializer):
     def validate_created_by(self, value):
         if LyfUser.objects.check_if_user_exists(value):
             user = LyfUser.objects.get_user_by_id(value)
-            
+
             return user
         else:
             raise serializers.ValidationError("User doesn't exist")
@@ -19,7 +19,7 @@ class DiaryEntrySerializer(serializers.ModelSerializer):
 
         fields = [
             'id',
-            'user_name',
+            'title',
             'description',
             'is_private',
             'created_by',

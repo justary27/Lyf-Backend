@@ -6,12 +6,13 @@ authors = ["just-ary27 <aryan_r@ch.iitr.ac.in>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11.4"
+python = "^3.11.6"
 Django = "^4.2.2"
 djangorestframework = "^3.14.0"
-python-dotenv = "^1.0.0"
+python-dotenv = "^1.0.1"
 firebase-admin = "^6.1.0"
 django-cors-headers = "^4.0.0"
+reportlab = "^4.0.9"
 
 [build-system]
 requires = ["poetry-core"]

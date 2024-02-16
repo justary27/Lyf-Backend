@@ -14,7 +14,12 @@ class DiaryEntryManager(models.Manager):
                 created_by=LyfUser.objects.get_user_by_id(user_id)
             ).all()
         )
-    
+
+    def get_user_entry(self, user_id, entry_id):
+        return self.filter(
+            id=entry_id, created_by=LyfUser.objects.get_user_by_id(user_id)
+        ).get()
+
     def check_if_entry_exists(self, entry_id):
         return self.filter(id=entry_id).exists()
     

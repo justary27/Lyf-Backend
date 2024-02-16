@@ -1,12 +1,12 @@
 from rest_framework import status
-from django.http import HttpResponse
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from services.firebase.auth import FirebaseAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from enums.response_type import ResponseType
-from handlers.pagination_handler import lyf_paginator
+from handlers.pagination_handler import LyfPaginator
 
 from .models import Todo
 from .enums import TodoMessages
@@ -19,7 +19,7 @@ class TodoViews:
     @api_view(["GET", "PUT", "POST", "PATCH", "DELETE"])
     @authentication_classes([FirebaseAuthentication])
     @permission_classes([IsAuthenticated])    
-    def todo_list(request: HttpResponse, user_id: str):
+    def todo_list(request: Request, user_id: str):
 
         match request.method:
             case "GET":
@@ -36,9 +36,9 @@ class TodoViews:
     @api_view(["GET", "PUT", "POST", "PATCH", "DELETE"])
     @authentication_classes([FirebaseAuthentication])
     @permission_classes([IsAuthenticated])
-    def todo_detail(request: HttpResponse, user_id: str, todo_id: str):
+    def todo_detail(request: Request, user_id: str, todo_id: str):
 
-        if Todo.objects.check_if_todo_exists(user_id):
+        if Todo.objects.check_if_todo_exists(todo_id):
             
             match request.method:
                 case "GET":
@@ -61,21 +61,18 @@ class TodoViews:
             )
             
     @staticmethod
-    def get_all_todos(request: HttpResponse, user_id: str):
+    def get_all_todos(request: Request, user_id: str):
 
         todos = Todo.objects.get_user_todos(user_id)
 
         serialized_todos = TodoSerializer(todos, many=True)
 
-        return lyf_paginator.get_paginated_response(
-            todos, request,
-            ResponseType.ok_request(
-                TodoMessages.SUCCESS.value, serialized_todos.data
-            ).get_data()
+        return LyfPaginator(request).get_paginated_response(
+            serialized_todos.data
         )
 
     @staticmethod
-    def create_todo(request: HttpResponse, user_id: str):
+    def create_todo(request: Request, user_id: str):
         data = request.data
 
         data["created_by"] = user_id
@@ -95,7 +92,7 @@ class TodoViews:
             )
 
     @staticmethod
-    def get_todo(request: HttpResponse, user_id: str, todo_id: str):
+    def get_todo(request: Request, user_id: str, todo_id: str):
 
         todo = Todo.objects.get_todo_by_id(todo_id)
         
@@ -107,7 +104,7 @@ class TodoViews:
         )
 
     @staticmethod
-    def update_todo(request: HttpResponse, user_id: str, todo_id: str):
+    def update_todo(request: Request, user_id: str, todo_id: str):
         data = request.data
 
         data["created_by"] = user_id
@@ -129,7 +126,7 @@ class TodoViews:
             )
 
     @staticmethod
-    def delete_todo(request: HttpResponse, user_id: str, todo_id: str):
+    def delete_todo(request: Request, user_id: str, todo_id: str):
         todo = Todo.objects.get_todo_by_id(todo_id)
 
         todo.delete()

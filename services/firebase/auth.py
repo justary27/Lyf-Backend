@@ -7,13 +7,19 @@ from user.models import LyfUser
 
 
 class FirebaseAuthentication(authentication.BaseAuthentication):
+    """
+
+    """
 
     @staticmethod
-    def fire_id(token):
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token['uid']
+    def fire_id(token: str):
+        if token.split(" ")[0] == "Token":
+            decoded_token = auth.verify_id_token(token)
+            uid = decoded_token['uid']
 
-        return uid
+            return uid
+        else:
+            raise Exception
 
     def authenticate(self, request):
         token = request.headers.get('Authorization')

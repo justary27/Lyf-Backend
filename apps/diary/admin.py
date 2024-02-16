@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import DiaryEntry
 
-# Register your models here.
+
 @admin.register(DiaryEntry)
 class DiaryEntryAdmin(admin.ModelAdmin):
 
