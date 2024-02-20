@@ -32,7 +32,10 @@ class ResponseType(Enum):
         if data is not None:
             content["data"] = data
 
-        content.update(kwargs["pagination_info"])
+        try:
+            content.update(kwargs["pagination_info"])
+        except KeyError:
+            pass
 
         return ResponseData(
             status.HTTP_200_OK, content

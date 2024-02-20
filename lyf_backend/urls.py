@@ -15,9 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import index
+
+handler500 = 'lyf_backend.views.handler500'
+handler404 = 'lyf_backend.views.handler404'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    path("", include("user.urls")),
+    path('', index),
+
+    path('<str:user_id>/', include("user.urls")),
 ]

@@ -1,4 +1,7 @@
+import io
+
 from rest_framework import status
+from django.http import FileResponse
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -7,13 +10,23 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 
 from enums.response_type import ResponseType
 from handlers.pagination_handler import LyfPaginator
+from services.reportlab.entry_exports import EntryPDFGen
 
 from .models import DiaryEntry
+from .utils import EntryTxtGen
 from .enums import DiaryMessage
 from .serializers import DiaryEntrySerializer
 
 
 class DiaryViews:
+    entry_text_generator = EntryTxtGen()
+    entry_pdf_generator = EntryPDFGen(
+        font_data={
+            "ABZee": "ABeeZee-Regular.ttf",
+            "Ubuntu": "Ubuntu-Regular.ttf",
+            "Caveat": "Caveat-Regular.ttf"
+        }
+    )
 
     @staticmethod
     @api_view(["GET", "PUT", "POST", "PATCH", "DELETE"])
@@ -23,7 +36,7 @@ class DiaryViews:
 
         match request.method:
             case "GET":
-                return DiaryViews.get_all_diaries(request, user_id)
+                return DiaryViews.get_diary(request, user_id)
             case "POST":
                 return DiaryViews.create_entry(request, user_id)
             case _:
@@ -61,7 +74,7 @@ class DiaryViews:
             )
 
     @staticmethod
-    def get_all_diaries(request: Request, user_id: str):
+    def get_diary(request: Request, user_id: str):
         """
         Get the list of all the DiaryEntry(s) of a LyfUser.
         """
@@ -74,6 +87,34 @@ class DiaryViews:
         )
 
     @staticmethod
+    @api_view(["GET"])
+    @authentication_classes([FirebaseAuthentication])
+    @permission_classes([IsAuthenticated])
+    def get_diary_as_txt(request: Request, user_id: str):
+        diary = DiaryEntry.objects.get_user_entries(user_id)
+
+        file_buffer = io.BytesIO()
+        file_buffer = DiaryViews.entry_text_generator.generate_diary(diary, file_buffer)
+        file_buffer.seek(0)
+
+        return FileResponse(file_buffer, as_attachment=True, filename=f"{request.user}_diary.txt")
+
+    @staticmethod
+    @api_view(["GET"])
+    @authentication_classes([FirebaseAuthentication])
+    @permission_classes([IsAuthenticated])
+    def get_diary_as_pdf(request: Request, user_id: str):
+        diary = DiaryEntry.objects.get_user_entries(user_id)
+
+        file_buffer = io.BytesIO()
+        file_buffer = DiaryViews.entry_pdf_generator.generate_diary(
+            diary=diary, file_buffer=file_buffer
+        )
+        file_buffer.seek(0)
+
+        return FileResponse(file_buffer, as_attachment=True, filename=f"{request.user}_diary.pdf")
+
+    @staticmethod
     def create_entry(request: Request, user_id: str):
         data = request.data
 
@@ -81,6 +122,7 @@ class DiaryViews:
 
         if entry_serializer.is_valid():
             entry_serializer.save()
+
             return Response(
                 ResponseType.ok_request(DiaryMessage.E_CREATE_SUCCESS.value).get_data(),
                 status.HTTP_201_CREATED
@@ -102,6 +144,34 @@ class DiaryViews:
             ResponseType.ok_request(DiaryMessage.SUCCESS.value, serialized_entry.data).get_data(),
             status.HTTP_200_OK
         )
+
+    @staticmethod
+    @api_view(["GET"])
+    @authentication_classes([FirebaseAuthentication])
+    @permission_classes([IsAuthenticated])
+    def get_entry_as_txt(request: Request, user_id: str, entry_id: str):
+        entry = DiaryEntry.objects.get_entry_by_id(entry_id)
+
+        file_buffer = io.BytesIO()
+        file_buffer = DiaryViews.entry_text_generator.generate_entry(entry, file_buffer)
+        file_buffer.seek(0)
+
+        return FileResponse(file_buffer, as_attachment=True, filename=f"{entry.title}.txt")
+
+    @staticmethod
+    @api_view(["GET"])
+    @authentication_classes([FirebaseAuthentication])
+    @permission_classes([IsAuthenticated])
+    def get_entry_as_pdf(request: Request, user_id: str, entry_id: str):
+        entry = DiaryEntry.objects.get_entry_by_id(entry_id)
+
+        file_buffer = io.BytesIO()
+        file_buffer = DiaryViews.entry_pdf_generator.generate_entry(
+            entry=entry, file_buffer=file_buffer
+        )
+        file_buffer.seek(0)
+
+        return FileResponse(file_buffer, as_attachment=True, filename=f"{entry.title}.pdf")
 
     @staticmethod
     def update_entry(request: Request, user_id: str, entry_id: str, **kwargs):

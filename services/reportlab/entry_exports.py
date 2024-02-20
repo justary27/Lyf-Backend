@@ -1,5 +1,4 @@
 import io
-from datetime import datetime
 from django.conf import settings
 
 from reportlab.lib.units import mm
@@ -10,7 +9,6 @@ from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.rl_settings import TTFSearchPath
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 
 from apps.diary.models import DiaryEntry
@@ -21,14 +19,14 @@ class EntryPDFGen:
 
     TITLE_STYLE: ParagraphStyle = ParagraphStyle(
         name="Title",
-        fontName="Ubuntu",
+        # fontName="Ubuntu",
         fontSize=25,
         textColor=HexColor("#16856f")
     )
 
     DATE_STYLE: ParagraphStyle = ParagraphStyle(
         name="Date",
-        fontName="ABZee",
+        # fontName="ABZee",
         fontSize=9,
         fontStyle="italic",
         textColor=HexColor("#ff5e0e")
@@ -36,7 +34,7 @@ class EntryPDFGen:
 
     DESCRIPTION_STYLE: ParagraphStyle = ParagraphStyle(
         name='Description',
-        fontName='ABZee',
+        # fontName='ABZee',
         fontSize=10,
         leading=15,
         wordWrap="CJK",
@@ -49,7 +47,7 @@ class EntryPDFGen:
         self.entry = None
         self.fileBuffer = None
 
-        self.fontData = font_data
+        self.font_data = font_data
 
         self.register_font()
 
@@ -66,7 +64,7 @@ class EntryPDFGen:
         page_number = canvas.getPageNumber()
         text = f"lyf | {page_number}"
 
-        canvas.setFont("Caveat", 18)
+        # canvas.setFont("Caveat", 18)
         canvas.setFillColorRGB(22 / 256, 133 / 256, 111 / 256)
         canvas.drawRightString(180 * mm, 17.5 * mm, text)
 
@@ -77,12 +75,13 @@ class EntryPDFGen:
             i += 1
 
     def register_font(self):
+        from reportlab.rl_settings import TTFSearchPath
+        TTFSearchPath += (str(settings.BASE_DIR) + "/static/fonts", )
 
-        for font in list(self.fontData.keys()):
-            font_file = self.fontData.get(font)
-            TTFSearchPath.append(str(settings.BASE_DIR) + "/static/fonts")
-            new_font = TTFont(font, font_file)
-            pdfmetrics.registerFont(new_font)
+        for font in list(self.font_data.keys()):
+            font_file = self.font_data.get(font)
+            # new_font = TTFont(font, font_file)
+            # pdfmetrics.registerFont(new_font)
 
     def draw_logo(self, canvas: Canvas, X, Y, width, height):
 
@@ -99,7 +98,6 @@ class EntryPDFGen:
 
     def generate_entry(self, entry: DiaryEntry, file_buffer: io.BytesIO):
 
-        self.entry = entry
         self.fileBuffer = file_buffer
         self.canvas = Canvas(self.fileBuffer, pagesize=A4)
         self.canvas.setCreator("Lyf")
@@ -107,11 +105,10 @@ class EntryPDFGen:
 
         parts = []
 
-        title = self.text_formatter(self.entry.title)
-        description = self.text_formatter(self.entry.description)
+        title = self.text_formatter(entry.title)
+        description = self.text_formatter(entry.description)
 
-        date_obj = datetime.fromisoformat(self.entry.created_on).date()
-        date_text = date_obj.strftime("%B %d, %Y")
+        date_text = entry.formatted_date()
 
         parts.append(Paragraph(date_text, style=self.DATE_STYLE))
         parts.append(Paragraph(title, style=self.TITLE_STYLE))
@@ -122,10 +119,10 @@ class EntryPDFGen:
 
         summary_name = SimpleDocTemplate(
             self.fileBuffer,
-            title=self.entry.title,
+            title=entry.title,
             creator="Lyf",
             author=entry.created_by.username,
-            subject=entry.created_by.username + "'s " + self.entry.title
+            subject=entry.created_by.username + "'s " + entry.title
         )
         summary_name.build(
             parts,
@@ -137,7 +134,6 @@ class EntryPDFGen:
 
     def generate_diary(self, diary: list, file_buffer: io.BytesIO):
 
-        self.diary = diary
         self.fileBuffer = file_buffer
         self.canvas = Canvas(self.fileBuffer, pagesize=A4)
         self.canvas.setCreator("Lyf")
@@ -145,11 +141,10 @@ class EntryPDFGen:
         template_entry: DiaryEntry = diary[0]
         parts: list = []
 
-        for entry in self.diary:
-            title = self.text_formatter(entry.as_dict['_title'])
-            date_obj = datetime.fromisoformat(entry.as_dict["_createdAt"]).date()
-            date_text = date_obj.strftime("%B %d, %Y")
-            description = self.text_formatter(entry.as_dict['_description'])
+        for entry in diary:
+            title = self.text_formatter(entry.title)
+            date_text = entry.formatted_date()
+            description = self.text_formatter(entry.description)
 
             parts.append(Paragraph(date_text, style=self.DATE_STYLE))
             parts.append(Paragraph(title, style=self.TITLE_STYLE))
@@ -161,10 +156,10 @@ class EntryPDFGen:
 
         summary_name = SimpleDocTemplate(
             self.fileBuffer,
-            title=template_entry.created_by + "'s Diary",
+            title=template_entry.created_by.username + "'s Diary",
             creator="Lyf",
-            author=template_entry.created_by,
-            subject=template_entry.created_by + "'s " + template_entry.title
+            author=template_entry.created_by.username,
+            subject=template_entry.created_by.username + "'s " + template_entry.title
         )
 
         summary_name.build(
@@ -184,41 +179,3 @@ fontData = {
 
 
 # DiaryGenerator = EntryPDFGenerator(fontData=fontData)
-
-
-class EntryTxtGen:
-    def __init__(self):
-        self.entry = None
-        self.diary = None
-        self.fileBuffer = None
-
-    def generate_entry(self, entry: DiaryEntry, file_buffer: io.BytesIO):
-        self.entry = entry
-        self.fileBuffer = file_buffer
-
-        text = f"""{entry.created_by}'s Diary\n\n{entry.title}\n{entry.description}\n{entry.created_on}"""
-
-        bytes_text = bytes(text, "utf-8")
-
-        file_buffer.write(bytes_text)
-
-        return self.fileBuffer
-
-    def generate_diary(self, diary: list, file_buffer: io.BytesIO):
-        self.diary = diary
-        self.fileBuffer = file_buffer
-
-        first_entry: DiaryEntry = diary[0]
-
-        text = f"""{first_entry.created_by}'s Diary\n\n"""
-
-        for entry in diary:
-            text += f"{entry.title}\n{entry.description}\n{entry.created_at}\n\n"
-
-        bytes_text = bytes(text, "utf-8")
-
-        file_buffer.write(bytes_text)
-
-        return self.fileBuffer
-
-# TxtGenerator = EntryTxtGenerator()

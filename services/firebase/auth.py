@@ -8,7 +8,8 @@ from user.models import LyfUser
 
 class FirebaseAuthentication(authentication.BaseAuthentication):
     """
-
+    Custom Authentication class that checks a firebase
+    auth token for validity.
     """
 
     @staticmethod

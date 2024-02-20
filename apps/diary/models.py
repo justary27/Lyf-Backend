@@ -8,7 +8,7 @@ from user.models import LyfUser
 
 class DiaryEntryManager(models.Manager):
 
-    def get_user_entries(self, user_id):
+    def get_user_entries(self, user_id) -> list:
         return list(
             self.filter(
                 created_by=LyfUser.objects.get_user_by_id(user_id)
@@ -66,6 +66,9 @@ class DiaryEntry(models.Model):
     )
 
     objects = DiaryEntryManager()
+
+    def formatted_date(self) -> str:
+        return self.created_on.strftime("%B %d, %Y")
 
     def __str__(self) -> str:
         return f"{self.title} #{self.id}"
