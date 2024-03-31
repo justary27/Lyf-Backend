@@ -1,5 +1,6 @@
 # Firebase
-credentials.json
+service_account_creds.json
+web_api_creds.json
 
 # Django #
 *.log
@@ -110,3 +111,6 @@ GitHub.sublime-settings
 # Visual Studio Code # 
 .vscode/* 
 .history
+
+# Static file build dir
+staticfiles/

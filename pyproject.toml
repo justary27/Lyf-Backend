@@ -10,9 +10,10 @@ python = "^3.11.6"
 Django = "^4.2.2"
 djangorestframework = "^3.14.0"
 python-dotenv = "^1.0.1"
-firebase-admin = "^6.1.0"
+firebase-admin = "^6.4.0"
 django-cors-headers = "^4.0.0"
-reportlab = "^4.0.9"
+reportlab = "^4.1.0"
+pyrebase4 = "^4.7.1"
 
 [build-system]
 requires = ["poetry-core"]
