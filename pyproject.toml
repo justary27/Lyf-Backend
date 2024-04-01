@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "lyf"
+name = "Lyf-Backend"
 version = "0.1.0"
 description = "Backend for the Lyf app"
-authors = ["just-ary27 <aryan_r@ch.iitr.ac.in>"]
+authors = ["justary27 <aryan_r@ch.iitr.ac.in>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

@@ -1,4 +1,5 @@
 import io
+import threading
 
 from rest_framework import status
 from django.http import FileResponse
@@ -10,6 +11,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 
 from enums.response_type import ResponseType
 from handlers.pagination_handler import LyfPaginator
+from services.firebase.store import FirebaseStore
 from services.reportlab.entry_exports import EntryPDFGen
 
 from .models import DiaryEntry
@@ -116,6 +118,23 @@ class DiaryViews:
 
     @staticmethod
     def create_entry(request: Request, user_id: str):
+        # if request.method == 'POST':
+        #     image = request.FILES.get('image')
+
+        #     if not image:
+        #         return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        #     # Create an InMemoryUploadedFile from the received image
+            
+
+        #     # Create a separate thread for uploading to Firebase and updating the model
+        #     upload_thread = threading.Thread(target=FirebaseStore.upload_and_get_download_url, args=('/testing', image))
+        #     upload_thread.start()
+
+        #     return Response({'message': 'Image received and processing started'}, status=status.HTTP_202_ACCEPTED)
+
+        # return Response({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         data = request.data
 
         entry_serializer = DiaryEntrySerializer(data=data)

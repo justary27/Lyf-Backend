@@ -18,10 +18,8 @@ from django.urls import path, include
 from django.conf import urls
 from .views import index
 
-urls.handler500 = 'lyf_backend.views.handler500'
-urls.handler404 = 'lyf_backend.views.handler404'
-
-print(urls.handler404)
+urls.handler500 = 'config.views.handler500'
+urls.handler404 = 'config.views.handler404'
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -31,7 +31,8 @@ SECRET_KEY = os.getenv("DJANGO_TOKEN")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-
+    'localhost',
+    '127.0.0.1',
 ]
 
 # Application definition
@@ -69,7 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'lyf_backend.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -87,7 +88,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'lyf_backend.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -120,7 +121,8 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'services.firebase.auth.FirebaseAuthentication'
-    ]
+    ],
+    'EXCEPTION_HANDLER': 'handlers.exception_handler.api_exception_handler',
 }
 
 # Internationalization
